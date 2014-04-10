@@ -8,5 +8,5 @@ setup(name='tetris',
       author='Kitten Tofu',
       author_email='kitten@eudemonia.io',
       url='http://eudemonia.io/tetris/',
-      packages=['tetirs'],
+      packages=['tetris'],
      )

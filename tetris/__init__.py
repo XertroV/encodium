@@ -169,7 +169,7 @@ class Field(object):
             length = int.from_bytes(data[index:index+1],'big')
             length_length = 1
             if length >= 0xfa:
-                length_length = 1 + length
+                length_length = 1 + (length-0xf9)
                 length = int.from_bytes(data[index+1:index+1+(length-0xf9)],'big')
             # TODO: validation on decoded length
             return length, length_length
@@ -252,7 +252,7 @@ class List(Field):
             length = int.from_bytes(data[index:index+1],'big')
             length_length = 1
             if length >= 0xfa:
-                length_length = 1 + length
+                length_length = 1 + (length-0xf9)
                 length = int.from_bytes(data[index+1:index+1+(length-0xf9)],'big')
             # TODO: validation on decoded length
             return length, length_length

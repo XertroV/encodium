@@ -46,5 +46,14 @@ class TestSerializable(unittest.TestCase):
         other_person = Person(name="Alice")
         self.assertNotEqual(Person.make(person.serialize()), other_person)
 
+    def test_big_bytes(self):
+        class SporeMessage(Field):
+            def fields():
+                method = String(max_length=100)
+                payload = Bytes()
+        big = b'\x00'*1024
+        message = SporeMessage.make(method='hello',payload=big)
+        self.assertEqual(message.payload,SporeMessage.make(message.serialize()).payload)
+
 if __name__ == '__main__':
     unittest.main()

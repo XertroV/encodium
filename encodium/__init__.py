@@ -129,7 +129,7 @@ class Field(object):
             raise ValidationError("cannot be None")
 
     def check_type(self, value):
-        if value.__class__ != self.type:
+        if value.__class__.__name__ != self.type.__name__:
             instance_type = value.__class__.__name__
             expected_type = self.type.__name__
             raise ValidationError("is of type " + instance_type + ", expected " + expected_type)
@@ -245,7 +245,7 @@ class List(Field):
             if attr is None:
                 array.append(b'\x00')
             else:
-                data = inner_field.serialize(attr)
+                data = self.inner_field.serialize(attr)
                 array.append(encode_length(len(data)))
                 array.append(data)
         return b''.join(array)
@@ -263,7 +263,7 @@ class List(Field):
         array = []
         while i < len(data):
             length, length_length = decode_length(data, i)
-            array.append(inner_field.deserialize(data[i+length_length:i+length_length+length]))
+            array.append(self.inner_field.deserialize(data[i+length_length:i+length_length+length]))
             i += length_length + length
         return array
 

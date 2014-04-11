@@ -43,8 +43,10 @@ class TestSerializable(unittest.TestCase):
         self.assertRaises(ValidationError, do_validation_error)
         person.age = 123412341234123412341234
         self.assertEqual(Person.make(person.serialize()), person)
-        other_person = Person(name="Alice")
+        other_person = Person.make(name="Alice")
         self.assertNotEqual(Person.make(person.serialize()), other_person)
+        person.children = [other_person]
+        self.assertEqual(Person.make(person.serialize()), person)
 
     def test_big_bytes(self):
         class SporeMessage(Field):

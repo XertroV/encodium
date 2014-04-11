@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='encodium',
-      version='0.0.3',
+      version='0.0.4',
       description='Yet another pure python serialization module',
       author='Kitten Tofu',
       author_email='kitten@eudemonia.io',

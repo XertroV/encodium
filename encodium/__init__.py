@@ -72,24 +72,23 @@ class Field(object):
                 def __setattr__(inner_self, key, value):
                     nonlocal self
                     fields = dict(self.get_fields())
-                    if key not in fields:
-                        raise ValidationError("No such field " + key)
-                    field = fields[key]
-                    if value is None:
-                        if callable(field.default):
-                            value = field.default()
-                        else:
-                            value = field.default
-                    try:
+                    if key in fields:
+                        field = fields[key]
                         if value is None:
-                            field.check_optional(value)
-                        else:
-                            field.check(value)
-                            field.check_type(value)
-                    except ValidationError as e:
-                        # Prepend the key to the exception message
-                        e.args = (key + " " + e.args[0],) + e.args[1:]
-                        raise
+                            if callable(field.default):
+                                value = field.default()
+                            else:
+                                value = field.default
+                        try:
+                            if value is None:
+                                field.check_optional(value)
+                            else:
+                                field.check(value)
+                                field.check_type(value)
+                        except ValidationError as e:
+                            # Prepend the key to the exception message
+                            e.args = (key + " " + e.args[0],) + e.args[1:]
+                            raise
                     inner_self.__dict__[key] = value
 
 

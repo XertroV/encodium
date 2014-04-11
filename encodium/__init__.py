@@ -209,15 +209,15 @@ class String(Field):
 
 class Integer(Field):
     type = int
-    def options():
+    def default_options():
         signed = True
     def serialize(self, i):
         bits=i.bit_length()
         if self.signed and i > 0 and bits%8==0:
             bits += 1
-        return i.to_bytes(max((bits+7)>>3,1), 'big', self.signed)
+        return i.to_bytes(max((bits+7)>>3,1), 'big', signed=self.signed)
     def deserialize(self, data):
-        return int.from_bytes(data,'big',self.signed)
+        return int.from_bytes(data, 'big', signed=self.signed)
 
 class List(Field):
     def __init__(self, inner_field, *args, **kwargs):

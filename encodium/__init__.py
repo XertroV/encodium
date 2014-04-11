@@ -15,7 +15,7 @@ import sys
 class ValidationError(Exception):
     pass
 
-def _tetris_get_locals(func):
+def _encodium_get_locals(func):
     ret = None
     def tracer(frame, event, arg):
         nonlocal ret
@@ -107,7 +107,7 @@ class Field(object):
 
         self.make = types.MethodType(make, self)
 
-        options = _tetris_get_locals(self.__class__.default_options)
+        options = _encodium_get_locals(self.__class__.default_options)
         self.default = None
         self.optional = None
         for key, value in options.items():
@@ -135,7 +135,7 @@ class Field(object):
         # Default serialize is to go through each of the fields.
         if not hasattr(self.__class__, 'fields'):
             raise NotImplementedError(self.__class__.__name__ + " has no fields")
-        fields = _tetris_get_locals(self.__class__.fields)
+        fields = _encodium_get_locals(self.__class__.fields)
         ordered_fields = []
         for key, value in fields.items():
             if isinstance(value, Field):

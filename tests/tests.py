@@ -1,4 +1,4 @@
-from tetris import *
+from encodium import *
 import unittest
 
 class TestSerializable(unittest.TestCase):

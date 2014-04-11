@@ -56,6 +56,9 @@ class Field(object):
                         if not hasattr(inner_self, key):
                             setattr(inner_self, key, None)
 
+                    if hasattr(inner_self, 'init'):
+                        inner_self.init()
+
                 def serialize(inner_self):
                     return self.serialize(inner_self)
 

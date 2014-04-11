@@ -230,6 +230,13 @@ class List(Field):
             except ValidationError as e:
                 e.args = ("inner element " + e.args[0],) + e.args[1:]
                 raise
+    def check(constraints, instances):
+        for instance in instances:
+            try:
+                constraints.inner_field.check(instance)
+            except ValidationError as e:
+                e.args = ("inner element " + e.args[0],) + e.args[1:]
+                raise
     def serialize(self, l):
         def encode_length(length):
             encoded_length = length.to_bytes((length.bit_length()+7)>>3,'big')

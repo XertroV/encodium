@@ -47,6 +47,7 @@ class TestSerializable(unittest.TestCase):
         self.assertNotEqual(Person.make(person.serialize()), other_person)
         person.children = [other_person]
         self.assertEqual(Person.make(person.serialize()), person)
+        self.assertNotEqual(Person.make(person.serialize()), None)
 
     def test_big_bytes(self):
         class SporeMessage(Field):

@@ -63,6 +63,8 @@ class Field(object):
                     return self.serialize(inner_self)
 
                 def __eq__(inner_self, other):
+                    if inner_self.__class__.__name__ != other.__class__.__name__:
+                        return False
                     fields = self.get_fields()
                     for name, field in fields:
                         if getattr(inner_self, name) != getattr(other, name):

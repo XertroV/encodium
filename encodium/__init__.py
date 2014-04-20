@@ -222,6 +222,7 @@ class Integer(Field):
         return int.from_bytes(data, 'big', signed=self.signed)
 
 class List(Field):
+    type=list
     def __init__(self, inner_field, *args, **kwargs):
         self.inner_field = inner_field
         super().__init__(*args, **kwargs)

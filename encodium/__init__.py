@@ -15,12 +15,15 @@ import sys
 class ValidationError(Exception):
     pass
 
+
 def _encodium_get_locals(func):
     ret = None
+
     def tracer(frame, event, arg):
         nonlocal ret
         if event == 'return':
             ret = frame.f_locals.copy()
+
     # tracer is activated on next call, return or exception
     old_tracer = sys.getprofile()
     sys.setprofile(tracer)
@@ -149,12 +152,12 @@ class Field(object):
 
     def serialize(self, value):
         def encode_length(length):
-            encoded_length = length.to_bytes((length.bit_length()+7)>>3,'big')
+            encoded_length = length.to_bytes((length.bit_length() + 7) >> 3, 'big')
             if length >= 0xfa:
                 encoded_length_length = len(encoded_length)
                 if encoded_length_length > 6:
                     raise ValidationError("length too big")
-                encoded_length = bytes([encoded_length_length+0xf9]) + encoded_length
+                encoded_length = bytes([encoded_length_length + 0xf9]) + encoded_length
             return encoded_length
 
         array = [b'\x01']
@@ -170,18 +173,19 @@ class Field(object):
 
     def deserialize(self, data):
         def decode_length(data, index=0):
-            length = int.from_bytes(data[index:index+1],'big')
+            length = int.from_bytes(data[index:index + 1], 'big')
             length_length = 1
             if length >= 0xfa:
-                length_length = 1 + (length-0xf9)
-                length = int.from_bytes(data[index+1:index+1+(length-0xf9)],'big')
+                length_length = 1 + (length - 0xf9)
+                length = int.from_bytes(data[index + 1:index + 1 + (length - 0xf9)], 'big')
             # TODO: validation on decoded length
             return length, length_length
+
         i = 1
         array = []
         while i < len(data):
             length, length_length = decode_length(data, i)
-            array.append(data[i+length_length:i+length_length+length])
+            array.append(data[i + length_length:i + length_length + length])
             i += length_length + length
         kwargs = {}
         for (key, field), item in zip(self.get_fields(), array):
@@ -198,31 +202,41 @@ class Field(object):
 
 class String(Field):
     type = str
+
     def default_options():
         max_length = None
+
     def check(self, value):
         if self.max_length is not None and len(value) > self.max_length:
             raise ValidationError("too long")
+
     def serialize(self, s):
         # Pity about this, no easy way to store the empty string. :(
         return b'\x01' + s.encode('utf-8')
+
     def deserialize(self, data):
         return data[1:].decode('utf-8')
 
+
 class Integer(Field):
     type = int
+
     def default_options():
         signed = True
+
     def serialize(self, i):
-        bits=i.bit_length()
-        if self.signed and i > 0 and bits%8==0:
+        bits = i.bit_length()
+        if self.signed and i > 0 and bits % 8 == 0:
             bits += 1
-        return i.to_bytes(max((bits+7)>>3,1), 'big', signed=self.signed)
+        return i.to_bytes(max((bits + 7) >> 3, 1), 'big', signed=self.signed)
+
     def deserialize(self, data):
         return int.from_bytes(data, 'big', signed=self.signed)
 
+
 class List(Field):
-    type=list
+    type = list
+
     def __init__(self, inner_field, *args, **kwargs):
         self.inner_field = inner_field
         super().__init__(*args, **kwargs)
@@ -237,6 +251,7 @@ class List(Field):
             except ValidationError as e:
                 e.args = ("inner element " + e.args[0],) + e.args[1:]
                 raise
+
     def check(constraints, instances):
         for instance in instances:
             try:
@@ -244,14 +259,15 @@ class List(Field):
             except ValidationError as e:
                 e.args = ("inner element " + e.args[0],) + e.args[1:]
                 raise
+
     def serialize(self, l):
         def encode_length(length):
-            encoded_length = length.to_bytes((length.bit_length()+7)>>3,'big')
+            encoded_length = length.to_bytes((length.bit_length() + 7) >> 3, 'big')
             if length >= 0xfa:
                 encoded_length_length = len(encoded_length)
                 if encoded_length_length > 6:
                     raise ValidationError("length too big")
-                encoded_length = bytes([encoded_length_length+0xf9]) + encoded_length
+                encoded_length = bytes([encoded_length_length + 0xf9]) + encoded_length
             return encoded_length
 
         array = [b'\x01']
@@ -266,31 +282,38 @@ class List(Field):
 
     def deserialize(self, data):
         def decode_length(data, index=0):
-            length = int.from_bytes(data[index:index+1],'big')
+            length = int.from_bytes(data[index:index + 1], 'big')
             length_length = 1
             if length >= 0xfa:
-                length_length = 1 + (length-0xf9)
-                length = int.from_bytes(data[index+1:index+1+(length-0xf9)],'big')
+                length_length = 1 + (length - 0xf9)
+                length = int.from_bytes(data[index + 1:index + 1 + (length - 0xf9)], 'big')
             # TODO: validation on decoded length
             return length, length_length
+
         i = 1
         array = []
         while i < len(data):
             length, length_length = decode_length(data, i)
-            array.append(self.inner_field.deserialize(data[i+length_length:i+length_length+length]))
+            array.append(self.inner_field.deserialize(data[i + length_length:i + length_length + length]))
             i += length_length + length
         return array
 
+
 class Boolean(Field):
     type = bool
+
     def serialize(self, b):
         return (b'\x01' if b else b'\x00')
+
     def deserialize(self, data):
         return data == b'\x01'
 
+
 class Bytes(Field):
     type = bytes
+
     def serialize(self, b):
         return b'\x01' + b
+
     def deserialize(self, data):
         return data[1:]

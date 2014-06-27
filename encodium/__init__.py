@@ -1,3 +1,109 @@
+'''
+
+Encodium
+========
+
+Encodium is a simple serialization and validation library.
+
+Getting started
+---------------
+
+Here's an example to get you started::
+
+    from encodium import Encodium, Integer, String, Boolean
+
+    class Person(Encodium):
+        age = Integer.Definition(non_negative=True)
+        name = String.Definition(max_length=50)
+        diabetic = Boolean.Definition(default=True)
+
+    # raises ValidationError("Age cannot be negative").
+    impossible = Person(age=-1, name='Impossible')
+
+    # raises ValidationError("Name must not be None").
+    nameless = Person(age=25)
+
+    # Works.
+    john = Person(age=25, name='John', diabetic=False)
+
+    # Does json.
+    json_representation = john.to_json()
+    new_john = Person.from_json(json_representation)
+
+    # Can read in an object from a socket.
+    foreign_person = Person.recv(sock)
+
+    # Can send an object over a socket.
+    john.send(sock)
+
+Validation
+----------
+
+Most validation in Encodium is performed automatically by the ``Definition``
+objects that are set as class variables.
+
+The following arguments are included:
+
+* ``optional`` -- Whether or not the attribute is allowed to be None.
+* ``default`` -- The default value to set the attribute to, if it is not
+  provided.
+
+Type checking is also included.
+
+Constraints can be implemented by defining ``check_attribute()`` on the type's
+``Definition`` class, as thus::
+
+    from encodium import Encodium, ValidationError
+
+    class Integer(int):
+        class Definition(Encodium.Definition):
+            def check_attribute(self, value):
+                if self.non_negative and value < 0:
+                    raise ValidationError('cannot be negative')
+
+More complex validation can be done by defining ``check()`` on the object.
+
+A useful paradigm when using encodium is to use the following invariant:
+If the object exists, then it is valid.
+
+Here's an example to illustrates this::
+
+    from encodium import Encodium, Bytes, ValidationError
+    import hashlib
+
+    class DataSHA256(Encodium):
+        data = Bytes.Definition()
+        sha256sum = Bytes.Definition()
+
+        def check(self, changed_attributes):
+            if 'data' in changed_attributes:
+                expected_hash = hashlib.sha256(self.data).digest()
+            else:
+                # The data hasn't changed, so the current hash valid.
+                expected_hash = self.sha256sum
+
+            if self.hash != expected_hash:
+                raise ValidationError('has an invalid hash')
+
+
+Recursive Definitions
+---------------------
+
+Sometimes it's necessary to have recursive definitions.
+However, python doesn't allow a class to reference itself during construction.
+
+To overcome this, ``Encodium.Definition('ClassName', ...)`` may be used
+instead of ``ClassName.Definition(...)``, as thus::
+
+    from encodium import Encodium, String
+
+    class Tree(Encodium):
+        left = Encodium.Definition('Tree', optional=True)
+        right = Encodium.Definition('Tree', optional=True)
+        value = String.Definition()
+
+'''
+
 import threading
 import types
 import importlib

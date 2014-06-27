@@ -102,7 +102,7 @@ Here's an example to illustrates this::
             if 'data' in changed_attributes:
                 expected_hash = hashlib.sha256(self.data).digest()
             else:
-                # The data hasn't changed, so the current hash valid.
+                # The data hasn't changed, so the current hash is valid.
                 expected_hash = self.sha256sum
 
             if self.hash != expected_hash:

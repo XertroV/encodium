@@ -104,9 +104,7 @@ instead of ``ClassName.Definition(...)``, as thus::
 
 '''
 
-import threading
 import types
-import importlib
 import sys
 
 # For now, None is always serialized as b''.

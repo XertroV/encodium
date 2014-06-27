@@ -8,7 +8,7 @@ Encodium is a simple serialization and validation library.
 Getting started
 ---------------
 
-Here's an example to get you started::
+Here's an example object to get you started::
 
     from encodium import Encodium, Integer, String, Boolean
 
@@ -16,6 +16,8 @@ Here's an example to get you started::
         age = Integer.Definition(non_negative=True)
         name = String.Definition(max_length=50)
         diabetic = Boolean.Definition(default=True)
+
+And here's what it looks in use::
 
     # raises ValidationError("Age cannot be negative").
     impossible = Person(age=-1, name='Impossible')
@@ -40,15 +42,36 @@ Validation
 ----------
 
 Most validation in Encodium is performed automatically by the ``Definition``
-objects that are set as class variables.
+objects that are set as class variables. For example::
 
-The following arguments are included:
+    from encodium import Encodium, Integer, String, Boolean
+
+    class Person(Encodium):
+        age = Integer.Definition(non_negative=True)
+        hat = String.Definition(default="Fedora")
+
+Each attribute is checked against it's definition when the ``Person`` is
+created::
+
+    john = Person(age=-1)
+
+The following arguments are included by default:
 
 * ``optional`` -- Whether or not the attribute is allowed to be None.
 * ``default`` -- The default value to set the attribute to, if it is not
   provided.
 
-Type checking is also included.
+Some examples::
+
+    # Raises ValidationError("Age cannot be None")
+    john = Person()
+
+    # lucy.hat will be set to "Fedora"
+    lucy = Person(age=25)
+
+Type checking is also included automatically::
+
+    john = Person(age="this is not an integer")
 
 Constraints can be implemented by defining ``check_attribute()`` on the type's
 ``Definition`` class, as thus::

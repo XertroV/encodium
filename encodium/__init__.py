@@ -267,7 +267,7 @@ class Encodium(metaclass=EncodiumMeta):
                 # TODO: decide how to handle this case.
                 sys.stderr.write("Warning: Argument " + name +
                                  " provided but isn't a field for" +
-                                 " Encodium type " + self.__class__.__name__)
+                                 " Encodium type " + self.__class__.__name__ + "\n")
             else:
                 definition = self.__class__.__dict__[name]
 

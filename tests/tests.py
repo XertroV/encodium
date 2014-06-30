@@ -50,8 +50,8 @@ class TestEquality(unittest.TestCase):
         self.assertNotEqual(john, lucy)
 
 
-class TestJsonReader(unittest.TestCase):
-    def test_json_reader(self):
+class TestJsonSendAndRecv(unittest.TestCase):
+    def test_json_send_and_recv(self):
         class Mocket:
             def __init__(self):
                 self.data = '{ "age": 25, "name": "John", "diabetic": true }\n'

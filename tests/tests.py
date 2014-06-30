@@ -1,6 +1,6 @@
 from encodium import Encodium, Integer, String, Boolean, ValidationError
 import unittest
-
+import json
 
 class Person(Encodium):
     age = Integer.Definition(non_negative=True)
@@ -54,10 +54,14 @@ class TestJsonReader(unittest.TestCase):
     def test_json_reader(self):
         class Mocket:
             def recv(self, buffersize, flags=None):
-                return '{ "age": 25, "name": "John" }\n'
+                return '{ "age": 25, "name": "John", "diabetic": true }\n'
+            def send(self, data):
+                self.received = data
 
         mocket = Mocket()
         john = Person.recv_from(mocket)
+        john.send_to(mocket)
+        self.assertEquals(json.loads(mocket.received), {'age': 25, 'name': 'John', 'diabetic': True})
 
 
 """

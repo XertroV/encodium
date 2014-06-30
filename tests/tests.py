@@ -53,15 +53,22 @@ class TestEquality(unittest.TestCase):
 class TestJsonReader(unittest.TestCase):
     def test_json_reader(self):
         class Mocket:
+            def __init__(self):
+                self.data = '{ "age": 25, "name": "John", "diabetic": true }\n'
+                self.counter = 0
+
             def recv(self, buffersize, flags=None):
-                return '{ "age": 25, "name": "John", "diabetic": true }\n'
+                ret = self.data[self.counter:self.counter + buffersize]
+                self.counter += len(ret)
+                return ret
+
             def send(self, data):
                 self.received = data
 
         mocket = Mocket()
         john = Person.recv_from(mocket)
         john.send_to(mocket)
-        self.assertEquals(json.loads(mocket.received), {'age': 25, 'name': 'John', 'diabetic': True})
+        self.assertEqual(json.loads(mocket.received), {'age': 25, 'name': 'John', 'diabetic': True})
 
 
 """

@@ -222,11 +222,18 @@ class Encodium(metaclass=EncodiumMeta):
             pass
 
         def to_json(self, value):
-            # Implementing all the primitives in one go, here.
-            try:
-                return json.dumps(value)
-            except TypeError:
+            if hasattr(value, 'to_json'):
                 return value.to_json()
+            else:
+                # Assume it is a primitive
+                return json.dumps(value)
+
+        @classmethod
+        def from_obj(cls, obj):
+            if hasattr(cls._encodium_type, 'from_obj'):
+                return cls._encodium_type.from_obj(obj)
+            else:
+                return obj
 
 
     def __init__(self, *args, **kwargs):
@@ -292,7 +299,7 @@ class Encodium(metaclass=EncodiumMeta):
         for name, definition in self._encodium_fields.items():
             if not first_iteration:
                 ret.append(',')
-                first_iteration = False
+            first_iteration = False
             ret.append('"')
             ret.append(name)
             ret.append('":')
@@ -300,7 +307,29 @@ class Encodium(metaclass=EncodiumMeta):
         ret.append('}')
         return ''.join(ret)
 
+    @classmethod
+    def from_obj(cls, obj):
+        kwargs = {}
+        for name, definition in cls._encodium_fields.items():
+            kwargs[name] = definition.from_obj(obj[name])
+        return cls(**kwargs)
+
+    @classmethod
+    def from_json(cls, data):
+        return cls.from_obj(json.loads(data))
+
+    @classmethod
+    def recv_from(cls, sock):
+        # TODO: refactor this into recv_json_from
+        data = []
+        while True:
+            data.append(sock.recv(1))
+            if data[-1] == '\n':
+                break
+        return cls.from_json(''.join(data))
+
     def send_to(self, sock):
+        # TODO: refactor this into send_json_to
         sock.send(self.to_json() + '\n')
 
 

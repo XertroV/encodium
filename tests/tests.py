@@ -105,6 +105,20 @@ class TestBytes(unittest.TestCase):
         self.assertRaises(ValidationError, TestBytes.Nonce.from_json, '{"data":"invalid base 64"}')
 
 
+class TestCallableDefault(unittest.TestCase):
+    def test_callable_default(self):
+        counter = 0
+        def next_counter():
+            nonlocal counter
+            try:
+                return counter
+            finally:
+                counter += 1
+        class Nonce(Encodium):
+            integer = Integer.Definition(default=next_counter)
+        nonce = [Nonce() for _ in range(3)]
+        [self.assertEqual(nonce[i].integer, i) for i in range(3)]
+
 """
     self.assertEqual(Person.make(person.serialize()), person)
     self.assertEqual(person.say_hello(), "Hello, I'm John")

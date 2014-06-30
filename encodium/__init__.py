@@ -243,7 +243,10 @@ class Encodium(metaclass=EncodiumMeta):
     def __init__(self, *args, **kwargs):
         for name, definition in self._encodium_fields.items():
             if name not in kwargs:
-                kwargs[name] = definition.default
+                if callable(definition.default):
+                    kwargs[name] = definition.default()
+                else:
+                    kwargs[name] = definition.default
 
         self.change(**kwargs)
 

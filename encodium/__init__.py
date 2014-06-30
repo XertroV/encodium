@@ -151,6 +151,8 @@ encodings soon.
 
 import sys
 import json
+import base64
+import binascii
 
 
 class ValidationError(Exception):
@@ -203,7 +205,7 @@ class Encodium(metaclass=EncodiumMeta):
         optional = False
         default = None
 
-        def __init__(self, **kwargs):
+        def __init__(self, *args, **kwargs):
             # Copy across kwargs.
             for key, value in kwargs.items():
                 self.__dict__[key] = value
@@ -218,7 +220,7 @@ class Encodium(metaclass=EncodiumMeta):
                 message += ', but was set to something of type ' + str(actual) + '.'
                 raise ValidationError(message)
 
-        def check_attribute(self, value):
+        def check_value(self, value):
             pass
 
         def to_json(self, value):
@@ -231,6 +233,8 @@ class Encodium(metaclass=EncodiumMeta):
         @classmethod
         def from_obj(cls, obj):
             if hasattr(cls._encodium_type, 'from_obj'):
+                if obj.__type__ != dict:
+                    raise ValidationError("Cannot create Encodium object from " + obj.__class__.__name__)
                 return cls._encodium_type.from_obj(obj)
             else:
                 return obj
@@ -309,6 +313,8 @@ class Encodium(metaclass=EncodiumMeta):
 
     @classmethod
     def from_obj(cls, obj):
+        if obj.__class__ != dict:
+            raise ValidationError("Cannot create Encodium object from " + obj.__class__.__name__)
         kwargs = {}
         for name, definition in cls._encodium_fields.items():
             kwargs[name] = definition.from_obj(obj[name])
@@ -316,7 +322,13 @@ class Encodium(metaclass=EncodiumMeta):
 
     @classmethod
     def from_json(cls, data):
-        return cls.from_obj(json.loads(data))
+        try:
+            obj = json.loads(data)
+        except ValueError:
+            obj = None
+        if obj is None:
+            raise ValidationError("Invalid JSON")
+        return cls.from_obj(obj)
 
     @classmethod
     def recv_from(cls, sock):
@@ -362,3 +374,41 @@ class Boolean(Encodium):
 
         def check_value(self, value):
             pass
+
+
+class List(Encodium):
+    class Definition(Encodium.Definition):
+        _encodium_type = list
+
+        def __init__(self, inner_definition, *args, **kwargs):
+            super().__init__(self, *args, **kwargs)
+            self.inner_definition = inner_definition
+
+        def check_type(self, value):
+            super().check_type(value)
+            if value is not None:
+                for inner_value in value:
+                    self.inner_definition.check_type(inner_value)
+
+        def check_value(self, value):
+            for inner_value in value:
+                self.inner_definition.check_value(value)
+
+
+class Bytes(Encodium):
+    class Definition(Encodium.Definition):
+        _encodium_type = bytes
+
+        def check_value(self, value):
+            pass
+
+        def to_json(self, value):
+            return json.dumps(base64.b64encode(value).decode('utf-8'))
+
+        @classmethod
+        def from_obj(cls, obj):
+            try:
+                return base64.b64decode(obj)
+            except binascii.Error:
+                pass
+            raise ValidationError("invalid base 64")

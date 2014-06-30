@@ -1,6 +1,7 @@
-from encodium import Encodium, Integer, String, Boolean, ValidationError
+from encodium import Encodium, Integer, String, Boolean, List, Bytes, ValidationError
 import unittest
 import json
+
 
 class Person(Encodium):
     age = Integer.Definition(non_negative=True)
@@ -69,6 +70,39 @@ class TestJsonSendAndRecv(unittest.TestCase):
         john = Person.recv_from(mocket)
         john.send_to(mocket)
         self.assertEqual(json.loads(mocket.received), {'age': 25, 'name': 'John', 'diabetic': True})
+
+
+class TestInvalidJson(unittest.TestCase):
+    def test_invalid_json(self):
+        self.assertRaises(ValidationError, Person.from_json, 'invalid json')
+        self.assertRaises(ValidationError, Person.from_json, '"not an object"')
+
+
+class TestList(unittest.TestCase):
+    def test_list(self):
+        class City(Encodium):
+            people = List.Definition(Person.Definition(), default=[])
+
+        city = City()
+        self.assertEqual(city.people, [])
+        city = City(people=[Person(age=25, name='John')])
+        self.assertEqual(city.people, [Person(age=25, name='John')])
+        self.assertRaises(ValidationError, City, people=[1])
+        self.assertRaises(ValidationError, City, people='Not a list')
+
+
+class TestBytes(unittest.TestCase):
+    class Nonce(Encodium):
+        data = Bytes.Definition()
+
+    def test_bytes(self):
+        blob = (123456789123456789).to_bytes(8, 'big')
+        nonce = TestBytes.Nonce(data=blob)
+        self.assertEqual(nonce.data, blob)
+        self.assertEqual(TestBytes.Nonce.from_json(nonce.to_json()), nonce)
+
+    def test_invalid_base64(self):
+        self.assertRaises(ValidationError, TestBytes.Nonce.from_json, '{"data":"invalid base 64"}')
 
 
 """

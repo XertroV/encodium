@@ -136,6 +136,17 @@ instead of ``ClassName.Definition(...)``, as thus::
         right = Encodium.Definition('Tree', optional=True)
         value = String.Definition()
 
+Transmitting over a Socket
+--------------------------
+
+Here's an example::
+
+    john = Person.recv_from(sock)
+    john.send_to(sock)
+
+The default encoding is JSON, but will have the option to specify alternative
+encodings soon.
+
 '''
 
 import sys

@@ -212,7 +212,7 @@ class Encodium(metaclass=EncodiumMeta):
 
         def check_type(self, value):
             if not self.optional and value is None:
-                raise ValidationError('cannot not be None')
+                raise ValidationError('cannot be None')
             expected = self._encodium_type
             actual = value.__class__
             if not issubclass(actual, expected):

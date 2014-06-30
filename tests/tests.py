@@ -26,10 +26,13 @@ class TestTypeChecker(unittest.TestCase):
 class TestValueChecker(unittest.TestCase):
     def test_raises_error_on_negative_age(self):
         self.assertRaises(ValidationError, Person, age=-1, name="John")
+
     def test_raises_error_on_long_name(self):
-        self.assertRaises(ValidationError, Person, age=25, name="Way Too Long"*50)
+        self.assertRaises(ValidationError, Person, age=25, name="Way Too Long" * 50)
+
     def test_works_for_valid_attributes(self):
         john = Person(age=25, name="John")
+
 
 """
     self.assertEqual(Person.make(person.serialize()), person)

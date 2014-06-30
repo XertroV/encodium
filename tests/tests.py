@@ -52,12 +52,12 @@ class TestEquality(unittest.TestCase):
 
 class TestJsonReader(unittest.TestCase):
     def test_json_reader(self):
-        class MockReader:
-            def read(self, buffersize, flags=None):
+        class Mocket:
+            def recv(self, buffersize, flags=None):
                 return '{ "age": 25, "name": "John" }\n'
 
-        mock_reader = MockReader()
-        john = Person.read_from(mock_reader)
+        mocket = Mocket()
+        john = Person.recv_from(mocket)
 
 
 """

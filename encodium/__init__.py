@@ -105,15 +105,23 @@ Constraints can be implemented by defining ``check_value()`` on the type's
 
     from encodium import Encodium, ValidationError
 
-    class Integer(int):
+    class Integer(Encodium):
         class Definition(Encodium.Definition):
+            _encodium_type = int
+            non_negative = False
+
             def check_value(self, value):
                 if self.non_negative and value < 0:
-                    raise ValidationError('cannot be negative')
+                    raise ValidationError("must not be negative")
 
+Note that `_encodium_type` can be used to override the expected type.
+Otherwise the class that `Definition` is nested inside will be used
+automatically if it inherits from `Encodium`.
 
 Recursive Definitions
 ---------------------
+
+Not yet implemented.
 
 Sometimes it's necessary to have recursive definitions.
 However, python doesn't allow a class to reference itself during construction.
@@ -258,7 +266,6 @@ class Integer(Encodium):
         def check_value(self, value):
             if self.non_negative and value < 0:
                 raise ValidationError("must not be negative")
-            pass
 
 
 class String(Encodium):

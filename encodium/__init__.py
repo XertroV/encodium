@@ -150,6 +150,7 @@ encodings soon.
 '''
 
 import sys
+import json
 
 
 class ValidationError(Exception):
@@ -178,6 +179,7 @@ class Field:
 class EncodiumMeta(type):
     def __init__(cls, name, bases, dict):
         super().__init__(name, bases, dict)
+
         # If this is not the base class, create some useful variables.
         if name != 'Encodium':
 
@@ -187,10 +189,10 @@ class EncodiumMeta(type):
 
             # Used to easily access the fields (can be overriden)
             if not hasattr(cls.Definition, '_encodium_fields'):
-                cls._encodium_fields = []
+                cls._encodium_fields = {}
                 for key, value in dict.items():
                     if isinstance(value, Encodium.Definition):
-                        cls._encodium_fields.append(key)
+                        cls._encodium_fields[key] = value
 
 
 class Encodium(metaclass=EncodiumMeta):
@@ -219,19 +221,25 @@ class Encodium(metaclass=EncodiumMeta):
         def check_attribute(self, value):
             pass
 
+        def to_json(self, value):
+            # Implementing all the primitives in one go, here.
+            try:
+                return json.dumps(value)
+            except TypeError:
+                return value.to_json()
+
 
     def __init__(self, *args, **kwargs):
-        for field in self._encodium_fields:
-            if field not in kwargs:
-                definition = self.__class__.__dict__[field]
-                kwargs[field] = definition.default
+        for name, definition in self._encodium_fields.items():
+            if name not in kwargs:
+                kwargs[name] = definition.default
 
         self.change(**kwargs)
 
     def __eq__(self, other):
         if self.__class__ == other.__class__:
-            for field in self._encodium_fields:
-                if self.__dict__[field] != other.__dict__[field]:
+            for name in self._encodium_fields.keys():
+                if self.__dict__[name] != other.__dict__[name]:
                     return False
         return True
 
@@ -240,43 +248,60 @@ class Encodium(metaclass=EncodiumMeta):
 
     def change(self, **kwargs):
         changed_attributes = {}
-        for field, value in kwargs.items():
-            if field not in self._encodium_fields:
+        for name, value in kwargs.items():
+            if name not in self._encodium_fields:
                 # TODO: decide how to handle this case.
-                sys.stderr.write("Warning: Argument " + field +
+                sys.stderr.write("Warning: Argument " + name +
                                  " provided but isn't a field for" +
                                  " Encodium type " + self.__class__.__name__)
             else:
-                definition = self.__class__.__dict__[field]
+                definition = self.__class__.__dict__[name]
 
                 try:
                     definition.check_type(value)
                     if value is not None:
                         definition.check_value(value)
-                    changed_attributes[field] = value
+                    changed_attributes[name] = value
                 except ValidationError as e:
                     # Prepend the name of the field to the exception message
-                    e.args = (field + " " + e.args[0],) + e.args[1:]
+                    e.args = (name + " " + e.args[0],) + e.args[1:]
                     raise
 
         backup = {}
-        for field, value in changed_attributes.items():
+        for name, value in changed_attributes.items():
             try:
-                backup[field] = self.__dict__[field]
+                backup[name] = self.__dict__[name]
             except KeyError:
-                backup[field] = None
-            self.__dict__[field] = value
+                backup[name] = None
+            self.__dict__[name] = value
 
         try:
             self.check(changed_attributes.keys())
         except ValidationError as e:
             # Restore the backup before re-raising.
-            for field, value in backup:
-                self.__dict__[field] = value
+            for name, value in backup:
+                self.__dict__[name] = value
             raise
 
     def check(self, changed_attributes):
         pass
+
+    def to_json(self):
+        ret = ['{']
+        first_iteration = True
+        for name, definition in self._encodium_fields.items():
+            if not first_iteration:
+                ret.append(',')
+                first_iteration = False
+            ret.append('"')
+            ret.append(name)
+            ret.append('":')
+            ret.append(definition.to_json(self.__dict__[name]))
+        ret.append('}')
+        return ''.join(ret)
+
+    def send_to(self, sock):
+        sock.send(self.to_json() + '\n')
 
 
 class Integer(Encodium):

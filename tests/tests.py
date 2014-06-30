@@ -34,6 +34,32 @@ class TestValueChecker(unittest.TestCase):
         john = Person(age=25, name="John")
 
 
+class TestEquality(unittest.TestCase):
+    def test_equality(self):
+        john = Person(age=25, name="John")
+        john_twin = Person(age=25, name="John")
+        self.assertEqual(john, john)
+        self.assertEqual(john, john_twin)
+        self.assertIsNot(john, john_twin)
+
+    def test_inequality(self):
+        john = Person(age=25, name="John")
+        john_senior = Person(age=55, name="John")
+        lucy = Person(age=25, name="Lucy")
+        self.assertNotEqual(john, john_senior)
+        self.assertNotEqual(john, lucy)
+
+
+class TestJsonReader(unittest.TestCase):
+    def test_json_reader(self):
+        class MockReader:
+            def read(self, buffersize, flags=None):
+                return '{ "age": 25, "name": "John" }\n'
+
+        mock_reader = MockReader()
+        john = Person.read_from(mock_reader)
+
+
 """
     self.assertEqual(Person.make(person.serialize()), person)
     self.assertEqual(person.say_hello(), "Hello, I'm John")

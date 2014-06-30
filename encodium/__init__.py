@@ -285,7 +285,10 @@ class String(Encodium):
 
         def check_value(self, value):
             if self.max_length is not None and len(value) >= self.max_length:
-                raise ValidationError("was set to a string of length " + str(len(value)) + " but cannot be longer than " + str(self.max_length))
+                raise ValidationError("was set to a string of length " +
+                                      str(len(value)) +
+                                      " but cannot be longer than " +
+                                      str(self.max_length))
 
 
 class Boolean(Encodium):

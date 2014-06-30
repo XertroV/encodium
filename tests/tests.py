@@ -7,6 +7,7 @@ class Person(Encodium):
     age = Integer.Definition(non_negative=True)
     name = String.Definition(max_length=50)
     diabetic = Boolean.Definition(default=True)
+    optional = Integer.Definition(optional=True)
 
 
 class TestTypeChecker(unittest.TestCase):
@@ -22,6 +23,9 @@ class TestTypeChecker(unittest.TestCase):
         self.assertRaises(ValidationError, Person)
         self.assertRaises(ValidationError, Person, age=25)
         self.assertRaises(ValidationError, Person, name="No age provided    ")
+
+    def test_optional(self):
+        john = Person(age=25, name="John")
 
 
 class TestValueChecker(unittest.TestCase):
@@ -108,16 +112,20 @@ class TestBytes(unittest.TestCase):
 class TestCallableDefault(unittest.TestCase):
     def test_callable_default(self):
         counter = 0
+
         def next_counter():
             nonlocal counter
             try:
                 return counter
             finally:
                 counter += 1
+
         class Nonce(Encodium):
             integer = Integer.Definition(default=next_counter)
+
         nonce = [Nonce() for _ in range(3)]
         [self.assertEqual(nonce[i].integer, i) for i in range(3)]
+
 
 """
     self.assertEqual(Person.make(person.serialize()), person)

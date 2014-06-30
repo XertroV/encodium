@@ -211,14 +211,16 @@ class Encodium(metaclass=EncodiumMeta):
                 self.__dict__[key] = value
 
         def check_type(self, value):
-            if not self.optional and value is None:
-                raise ValidationError('cannot be None')
-            expected = self._encodium_type
-            actual = value.__class__
-            if not issubclass(actual, expected):
-                message = 'is supposed to be type ' + str(expected)
-                message += ', but was set to something of type ' + str(actual) + '.'
-                raise ValidationError(message)
+            if value is None:
+                if not self.optional:
+                    raise ValidationError('cannot be None')
+            else:
+                expected = self._encodium_type
+                actual = value.__class__
+                if not issubclass(actual, expected):
+                    message = 'is supposed to be type ' + str(expected)
+                    message += ', but was set to something of type ' + str(actual) + '.'
+                    raise ValidationError(message)
 
         def check_value(self, value):
             pass
@@ -320,7 +322,8 @@ class Encodium(metaclass=EncodiumMeta):
             raise ValidationError("Cannot create Encodium object from " + obj.__class__.__name__)
         kwargs = {}
         for name, definition in cls._encodium_fields.items():
-            kwargs[name] = definition.from_obj(obj[name])
+            if name in obj:
+                kwargs[name] = definition.from_obj(obj[name])
         return cls(**kwargs)
 
     @classmethod

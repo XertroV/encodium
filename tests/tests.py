@@ -73,7 +73,7 @@ class TestJsonSendAndRecv(unittest.TestCase):
         mocket = Mocket()
         john = Person.recv_from(mocket)
         john.send_to(mocket)
-        self.assertEqual(json.loads(mocket.received), {'age': 25, 'name': 'John', 'diabetic': True})
+        self.assertEqual(json.loads(mocket.received), {'age': 25, 'name': 'John', 'diabetic': True, 'optional': None})
 
 
 class TestInvalidJson(unittest.TestCase):

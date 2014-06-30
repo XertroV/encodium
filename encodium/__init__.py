@@ -217,6 +217,16 @@ class Encodium(metaclass=EncodiumMeta):
 
         self.change(**kwargs)
 
+    def __eq__(self, other):
+        if self.__class__ == other.__class__:
+            for field in self._encodium_fields:
+                if self.__dict__[field] != other.__dict__[field]:
+                    return False
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
+
     def change(self, **kwargs):
         changed_attributes = {}
         for field, value in kwargs.items():

@@ -192,21 +192,27 @@ class EncodiumMeta(type):
 
             cls.Definition = Definition
 
-            # Used for type checking.
+            # _encodium_type is used for type checking.
             if not hasattr(cls.Definition, '_encodium_type'):
                 cls.Definition._encodium_type = cls
 
-            # Used to easily access the fields (can be overriden)
-            if not hasattr(cls, '_encodium_fields'):
-                cls._encodium_fields = {}
-                for key, value in dict.items():
-                    if isinstance(value, Encodium.Definition):
-                        cls._encodium_fields[key] = value
+            # _encodium_fields is used to easily access the fields.
+            # This copy means it wont clobber the parent class.
+            for key, value in cls._encodium_fields.items():
+                setattr(cls, key, value)
+            cls._encodium_fields = cls._encodium_fields.copy()
+
+            # Adds the fields from this class.
+            for key, value in dict.items():
+                if isinstance(value, Encodium.Definition):
+                    cls._encodium_fields[key] = value
 
 
 class Encodium(metaclass=EncodiumMeta):
     ''' This is the base class for all Encodium objects.
     '''
+
+    _encodium_fields = {}
 
     class Definition:
         optional = False
@@ -356,6 +362,10 @@ class Encodium(metaclass=EncodiumMeta):
     def send_to(self, sock):
         # TODO: refactor this into send_json_to
         sock.send(self.to_json() + '\n')
+
+
+    def serialize(self):
+        return self.to_json().encode()
 
 
 class Integer(Encodium):

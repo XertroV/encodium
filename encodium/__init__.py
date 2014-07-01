@@ -184,20 +184,20 @@ class EncodiumMeta(type):
 
         # If this is not the base class, create some useful variables.
         if name != 'Encodium':
-
             # First, make sure that it has it's own Definition class.
-            if cls.Definition == Encodium.Definition:
-                class Definition(Encodium.Definition):
-                    pass
+            # Duplicate even if it has it's own already, in order to support
+            # inheritance.
+            class Definition(cls.Definition):
+                pass
 
-                cls.Definition = Definition
+            cls.Definition = Definition
 
             # Used for type checking.
             if not hasattr(cls.Definition, '_encodium_type'):
                 cls.Definition._encodium_type = cls
 
             # Used to easily access the fields (can be overriden)
-            if not hasattr(cls.Definition, '_encodium_fields'):
+            if not hasattr(cls, '_encodium_fields'):
                 cls._encodium_fields = {}
                 for key, value in dict.items():
                     if isinstance(value, Encodium.Definition):

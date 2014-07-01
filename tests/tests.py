@@ -149,6 +149,13 @@ class TestCallableDefault(unittest.TestCase):
         nonce = [Nonce() for _ in range(3)]
         [self.assertEqual(nonce[i].integer, i) for i in range(3)]
 
+class TestInheritance(unittest.TestCase):
+    def disabled_test_inheritance(self):
+        class Dad(Person):
+            puns = List.Definition(String.Definition())
+
+        dad = Dad(age=60, name='Paul')
+        self.assertTrue(hasattr(dad, 'age'))
 
 """
     self.assertEqual(Person.make(person.serialize()), person)

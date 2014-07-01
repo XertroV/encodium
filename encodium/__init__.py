@@ -245,12 +245,11 @@ class Encodium(metaclass=EncodiumMeta):
                 # Assume it is a primitive
                 return json.dumps(value)
 
-        @classmethod
-        def from_obj(cls, obj):
-            if hasattr(cls._encodium_type, 'from_obj'):
+        def from_obj(self, obj):
+            if hasattr(self._encodium_type, 'from_obj'):
                 if obj.__type__ != dict:
                     raise ValidationError("Cannot create Encodium object from " + obj.__class__.__name__)
-                return cls._encodium_type.from_obj(obj)
+                return self._encodium_type.from_obj(obj)
             else:
                 return obj
 
@@ -363,7 +362,6 @@ class Encodium(metaclass=EncodiumMeta):
         # TODO: refactor this into send_json_to
         sock.send(self.to_json() + '\n')
 
-
     def serialize(self):
         return self.to_json().encode()
 
@@ -411,11 +409,28 @@ class List(Encodium):
             super().check_type(value)
             if value is not None:
                 for inner_value in value:
-                    self.inner_definition.check_type(inner_value)
+                    try:
+                        self.inner_definition.check_type(inner_value)
+                    except ValidationError as e:
+                        # Prepend the inner-ness to the error message.
+                        e.args = ('inner item ' + e.args[0],) + e.args[1:]
+                        raise
 
         def check_value(self, value):
             for inner_value in value:
-                self.inner_definition.check_value(value)
+                try:
+                    self.inner_definition.check_value(value)
+                except ValidationError as e:
+                    # Prepend the inner-ness to the error message.
+                    e.args = ('inner item ' + e.args[0],) + e.args[1:]
+                    raise
+
+        def to_json(self, value):
+            inner_json = [self.inner_definition.to_json(inner_value) for inner_value in value]
+            return '[' + ','.join(inner_json) + ']'
+
+        def from_obj(self, obj):
+            return [self.inner_definition.from_obj(inner_obj) for inner_obj in obj]
 
 
 class Bytes(Encodium):

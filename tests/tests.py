@@ -18,6 +18,10 @@ class City(Encodium):
     parties = List.Definition(Party.Definition())
 
 
+class Dad(Person):
+    puns = List.Definition(String.Definition())
+
+
 class TestTypeChecker(unittest.TestCase):
     def test_encodium_type(self):
         self.assertEqual(Person.Definition._encodium_type, Person)
@@ -152,51 +156,19 @@ class TestCallableDefault(unittest.TestCase):
 
 class TestInheritance(unittest.TestCase):
     def test_inheritance(self):
-        class Dad(Person):
-            puns = List.Definition(String.Definition())
-
         dad = Dad(age=60, name='Paul', puns=[])
         self.assertTrue(hasattr(dad, 'age'))
 
 
-"""
-    self.assertEqual(Person.make(person.serialize()), person)
-    self.assertEqual(person.say_hello(), "Hello, I'm John")
-    self.assertRaises(ValidationError, Person(allow_hat=False).make, name='John', hat='Fedora')
-    person.age = 10
+class TestListSerialization(unittest.TestCase):
+    def test_list_serialization(self):
+        class NonStandardJsonEncoder(Encodium):
+            byteslist = List.Definition(Bytes.Definition())
 
-    def do_validation_error():
-        person.is_dead = 12
+        non_standard_json_encoder = NonStandardJsonEncoder(byteslist=[b'test'])
+        s = non_standard_json_encoder.to_json()
+        self.assertEqual(NonStandardJsonEncoder.from_json(s), non_standard_json_encoder)
 
-    self.assertRaises(ValidationError, do_validation_error)
-    person.is_dead = True
-    person.privkey = b'1234'
-    self.assertEqual(Person.make(person.serialize()), person)
-
-    def do_validation_error():
-        person.name = ('too long' * 30)
-
-    self.assertRaises(ValidationError, do_validation_error)
-    person.age = 123412341234123412341234
-    self.assertEqual(Person.make(person.serialize()), person)
-    other_person = Person.make(name="Alice")
-    self.assertNotEqual(Person.make(person.serialize()), other_person)
-    person.children = [other_person]
-    self.assertEqual(Person.make(person.serialize()), person)
-    self.assertNotEqual(Person.make(person.serialize()), None)
-
-
-def test_big_bytes(self):
-    class SporeMessage(Field):
-        def fields():
-            method = String(max_length=100)
-            payload = Bytes()
-
-    big = b'\x00' * 1024
-    message = SporeMessage.make(method='hello', payload=big)
-    self.assertEqual(message.payload, SporeMessage.make(message.serialize()).payload)
-
-"""
 
 if __name__ == '__main__':
     unittest.main()

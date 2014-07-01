@@ -185,6 +185,13 @@ class EncodiumMeta(type):
         # If this is not the base class, create some useful variables.
         if name != 'Encodium':
 
+            # First, make sure that it has it's own Definition class.
+            if cls.Definition == Encodium.Definition:
+                class Definition(Encodium.Definition):
+                    pass
+
+                cls.Definition = Definition
+
             # Used for type checking.
             if not hasattr(cls.Definition, '_encodium_type'):
                 cls.Definition._encodium_type = cls

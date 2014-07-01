@@ -10,6 +10,14 @@ class Person(Encodium):
     optional = Integer.Definition(optional=True)
 
 
+class Party(Encodium):
+    people = List.Definition(Person.Definition())
+
+
+class City(Encodium):
+    parties = List.Definition(Party.Definition())
+
+
 class TestTypeChecker(unittest.TestCase):
     def test_encodium_type(self):
         self.assertEqual(Person.Definition._encodium_type, Person)
@@ -26,6 +34,21 @@ class TestTypeChecker(unittest.TestCase):
 
     def test_optional(self):
         john = Person(age=25, name="John")
+
+
+class TestNestedTypeChecker(unittest.TestCase):
+    def test_nested_type_checker(self):
+        City(parties=[Party(people=[Person(age=25, name="John")])])
+
+        def invalid_case_1():
+            City(parties=[Party(people=[Person(name="John")])])
+
+        self.assertRaises(ValidationError, invalid_case_1)
+
+        def invalid_case_2():
+            City(parties=[Party(people=City(parties=[]))])
+
+        self.assertRaises(ValidationError, invalid_case_2)
 
 
 class TestValueChecker(unittest.TestCase):

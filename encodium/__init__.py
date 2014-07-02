@@ -174,6 +174,7 @@ class Field:
         msg += "    from encodium import ___\n"
         msg += "to\n"
         msg += "    from encodium.deprecated import ___\n"
+        msg += "This will be removed when version 1.0 is released.\n"
         sys.stderr.write(msg)
         raise Exception("Upgrade Encodium")
 

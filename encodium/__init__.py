@@ -248,7 +248,7 @@ class Encodium(metaclass=EncodiumMeta):
 
         def from_obj(self, obj):
             if hasattr(self._encodium_type, 'from_obj'):
-                if obj.__type__ != dict:
+                if not isinstance(obj, dict):
                     raise ValidationError("Cannot create Encodium object from " + obj.__class__.__name__)
                 return self._encodium_type.from_obj(obj)
             else:

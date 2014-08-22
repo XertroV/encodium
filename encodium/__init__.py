@@ -318,7 +318,10 @@ class Encodium(metaclass=EncodiumMeta):
     def to_json(self):
         ret = ['{']
         first_iteration = True
-        for name, definition in self._encodium_fields.items():
+        fields = list(self._encodium_fields.keys())
+        fields.sort()
+        for name in fields:
+            definition = self._encodium_fields[name]
             if not first_iteration:
                 ret.append(',')
             first_iteration = False
@@ -335,7 +338,7 @@ class Encodium(metaclass=EncodiumMeta):
             raise ValidationError("Cannot create Encodium object from " + obj.__class__.__name__)
         kwargs = {}
         for name, definition in cls._encodium_fields.items():
-            if name in obj:
+            if name in obj and obj[name] != None:
                 kwargs[name] = definition.from_obj(obj[name])
         return cls(**kwargs)
 

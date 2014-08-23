@@ -423,7 +423,7 @@ class List(Encodium):
         def check_value(self, value):
             for inner_value in value:
                 try:
-                    self.inner_definition.check_value(value)
+                    self.inner_definition.check_value(inner_value)
                 except ValidationError as e:
                     # Prepend the inner-ness to the error message.
                     e.args = ('inner item ' + e.args[0],) + e.args[1:]

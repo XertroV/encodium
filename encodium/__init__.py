@@ -349,7 +349,7 @@ class Encodium(metaclass=EncodiumMeta):
         except ValueError:
             obj = None
         if obj is None:
-            raise ValidationError("Invalid JSON")
+            raise ValidationError("Invalid JSON: %s" % data)
         return cls.from_obj(obj)
 
     @classmethod

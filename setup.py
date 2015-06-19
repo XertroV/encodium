@@ -9,4 +9,5 @@ setup(name='encodium',
       author_email='kitten@eudemonia.io',
       url='http://eudemonia.io/encodium/',
       packages=['encodium'],
+      requirements=['bencodepy'],
      )

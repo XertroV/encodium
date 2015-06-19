@@ -1,6 +1,8 @@
-from encodium import Encodium, Integer, String, Boolean, List, Bytes, ValidationError
 import unittest
 import json
+from collections import OrderedDict
+
+from encodium import Encodium, Integer, String, Boolean, List, Bytes, ValidationError
 
 
 class Person(Encodium):
@@ -168,6 +170,33 @@ class TestListSerialization(unittest.TestCase):
         non_standard_json_encoder = NonStandardJsonEncoder(byteslist=[b'test'])
         s = non_standard_json_encoder.to_json()
         self.assertEqual(NonStandardJsonEncoder.from_json(s), non_standard_json_encoder)
+
+
+class TestPrimitives(unittest.TestCase):
+    def test_primitives(self):
+        class P(Encodium):
+            l = List.Definition(Bytes.Definition())
+            i = Integer.Definition()
+            s = String.Definition()
+
+        p = P(l=[b'1'], i=1, s='test')
+        self.assertEqual(p.to_primitive(), OrderedDict([('i', 1), ('l', [b'1']), ('s', 'test')]))
+
+class TestBencode(unittest.TestCase):
+    def test_bencode(self):
+        class ADict(Encodium):
+            key1 = Integer.Definition()
+            key2 = Bytes.Definition()
+
+        class P(Encodium):
+            l = List.Definition(Bytes.Definition())
+            i = Integer.Definition()
+            s = String.Definition()
+            d = ADict.Definition()
+
+        p = P(l=[b'BYTES'], i=1234567890, s='STRING', d=ADict(key1=999, key2=b'MOAR'))
+        self.assertEqual(p.to_bencode(), b'd1:dd4:key1i999e4:key24:MOARe1:ii1234567890e1:ll5:BYTESe1:s6:STRINGe')
+        self.assertEqual(P.from_bencode(b'd1:dd4:key1i999e4:key24:MOARe1:ii1234567890e1:ll5:BYTESe1:s6:STRINGe'), p)
 
 
 if __name__ == '__main__':

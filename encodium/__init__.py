@@ -153,7 +153,9 @@ import sys
 import json
 import base64
 import binascii
+from collections import OrderedDict
 
+from bencodepy import encode as to_bencode, decode as from_bencode
 
 class ValidationError(Exception):
     ''' Raise in the case of a validation error.
@@ -246,6 +248,12 @@ class Encodium(metaclass=EncodiumMeta):
                 # Assume it is a primitive
                 return json.dumps(value)
 
+        def to_primitive(self, value):
+            if hasattr(value, 'to_primitive'):
+                return value.to_primitive()
+            else:
+                return value
+
         def from_obj(self, obj):
             if hasattr(self._encodium_type, 'from_obj'):
                 if not isinstance(obj, dict):
@@ -253,7 +261,6 @@ class Encodium(metaclass=EncodiumMeta):
                 return self._encodium_type.from_obj(obj)
             else:
                 return obj
-
 
     def __init__(self, *args, **kwargs):
         for name, definition in self._encodium_fields.items():
@@ -332,14 +339,29 @@ class Encodium(metaclass=EncodiumMeta):
         ret.append('}')
         return ''.join(ret)
 
+    def to_bencode(self):
+        return to_bencode(self.to_primitive())
+
+    def to_primitive(self):
+        fields = list(self._encodium_fields.keys())
+        fields.sort()
+        return OrderedDict([(field, self._encodium_fields[field].to_primitive(self.__dict__[field])) for field in fields])
+
+    @classmethod
+    def from_bencode(cls, bencoded):
+        return cls.from_obj(from_bencode(bencoded))
+
     @classmethod
     def from_obj(cls, obj):
-        if obj.__class__ != dict:
+        if obj.__class__ != dict and obj.__class__ != OrderedDict:
             raise ValidationError("Cannot create Encodium object from " + obj.__class__.__name__)
         kwargs = {}
         for name, definition in cls._encodium_fields.items():
             if name in obj and obj[name] != None:
                 kwargs[name] = definition.from_obj(obj[name])
+            elif name.encode() in obj and obj[name.encode()] is not None:
+                kwargs[name] = definition.from_obj(obj[name.encode()])
+        print(kwargs)
         return cls(**kwargs)
 
     @classmethod
@@ -366,9 +388,6 @@ class Encodium(metaclass=EncodiumMeta):
         # TODO: refactor this into send_json_to
         sock.send(self.to_json() + '\n')
 
-    def serialize(self):
-        return self.to_json().encode()
-
 
 class Integer(Encodium):
     class Definition(Encodium.Definition):
@@ -380,18 +399,20 @@ class Integer(Encodium):
                 raise ValidationError("must not be negative")
 
 
+
 class String(Encodium):
     class Definition(Encodium.Definition):
         _encodium_type = str
         max_length = None
 
         def check_value(self, value):
-            if self.max_length is not None and len(value) >= self.max_length:
-                raise ValidationError("was set to a string of length " +
-                                      str(len(value)) +
-                                      " but cannot be longer than " +
-                                      str(self.max_length))
+            if self.max_length is not None and len(value) > self.max_length:
+                raise ValidationError("was set to a string of length %d but cannot be longer than %d" % (len(value), self.max_length))
 
+        def from_obj(self, obj):
+            if type(obj) is bytes:
+                return obj.decode()
+            return obj
 
 class Boolean(Encodium):
     class Definition(Encodium.Definition):
@@ -434,6 +455,7 @@ class List(Encodium):
             return '[' + ','.join(inner_json) + ']'
 
         def from_obj(self, obj):
+            print(obj)
             return [self.inner_definition.from_obj(inner_obj) for inner_obj in obj]
 
 
@@ -449,6 +471,8 @@ class Bytes(Encodium):
 
         @classmethod
         def from_obj(cls, obj):
+            if type(obj) is bytes:
+                return obj
             try:
                 return base64.b64decode(obj)
             except binascii.Error:

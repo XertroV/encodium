@@ -345,7 +345,11 @@ class Encodium(metaclass=EncodiumMeta):
     def to_primitive(self):
         fields = list(self._encodium_fields.keys())
         fields.sort()
-        return OrderedDict([(field, self._encodium_fields[field].to_primitive(self.__dict__[field])) for field in fields])
+        return OrderedDict([(field, self._encodium_fields[field].to_primitive(self.__dict__[field])) for field in fields if self.__dict__[field] is not None])
+
+    @classmethod
+    def deserialize(cls, encoded):
+        return cls.from_bencode(encoded)
 
     @classmethod
     def from_bencode(cls, bencoded):
@@ -361,7 +365,6 @@ class Encodium(metaclass=EncodiumMeta):
                 kwargs[name] = definition.from_obj(obj[name])
             elif name.encode() in obj and obj[name.encode()] is not None:
                 kwargs[name] = definition.from_obj(obj[name.encode()])
-        print(kwargs)
         return cls(**kwargs)
 
     @classmethod
@@ -455,7 +458,6 @@ class List(Encodium):
             return '[' + ','.join(inner_json) + ']'
 
         def from_obj(self, obj):
-            print(obj)
             return [self.inner_definition.from_obj(inner_obj) for inner_obj in obj]
 
 

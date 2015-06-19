@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='encodium',
       version='0.1.0',
@@ -9,5 +9,5 @@ setup(name='encodium',
       author_email='kitten@eudemonia.io',
       url='http://eudemonia.io/encodium/',
       packages=['encodium'],
-      requirements=['bencodepy'],
+      install_requires=['bencodepy'],
      )

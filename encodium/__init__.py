@@ -272,6 +272,9 @@ class Encodium(metaclass=EncodiumMeta):
 
         self.change(**kwargs)
 
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__, str(self.to_primitive()))
+
     def __eq__(self, other):
         if self.__class__ == other.__class__:
             for name in self._encodium_fields.keys():

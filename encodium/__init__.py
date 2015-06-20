@@ -347,6 +347,9 @@ class Encodium(metaclass=EncodiumMeta):
         fields.sort()
         return OrderedDict([(field, self._encodium_fields[field].to_primitive(self.__dict__[field])) for field in fields if self.__dict__[field] is not None])
 
+    def serialize(self):
+        return self.to_bencode()
+
     @classmethod
     def deserialize(cls, encoded):
         return cls.from_bencode(encoded)

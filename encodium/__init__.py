@@ -251,6 +251,8 @@ class Encodium(metaclass=EncodiumMeta):
         def to_primitive(self, value):
             if hasattr(value, 'to_primitive'):
                 return value.to_primitive()
+            elif type(value) is list:
+                return [v.to_primitive() if hasattr(v, 'to_primitive') else v for v in value]
             else:
                 return value
 
